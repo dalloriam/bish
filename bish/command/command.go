@@ -1,4 +1,4 @@
-package bish
+package command
 
 import (
 	"os"
@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/dalloriam/bish/bish/builtins"
+	"github.com/dalloriam/bish/bish/config"
 )
 
 // Command represents a command to execute.
@@ -14,7 +15,7 @@ type Command struct {
 	Arguments []string
 }
 
-func ParseCommand(input string) (Command, error) {
+func ParseCommand(input string) (*Command, error) {
 	// Remove the newline character.
 	input = strings.TrimSuffix(input, "\n")
 
@@ -22,10 +23,10 @@ func ParseCommand(input string) (Command, error) {
 	// TODO: Fancier argument parsing.
 	args := strings.Split(input, " ")
 
-	return Command{Cmd: args[0], Arguments: args[1:]}, nil
+	return &Command{Cmd: args[0], Arguments: args[1:]}, nil
 }
 
-func (c *Command) nativeExec() error {
+func (c *Command) nativeExec(cfg config.IOConfig) error {
 	// Pass the program and the arguments separately.
 	cmd := exec.Command(c.Cmd, c.Arguments...)
 
@@ -38,13 +39,13 @@ func (c *Command) nativeExec() error {
 }
 
 // Execute executes the command.
-func (c *Command) Execute() error {
+func (c *Command) Execute(cfg config.IOConfig) error {
 	switch c.Cmd {
 	case builtins.CdName:
 		return builtins.ChangeDirectory(c.Arguments[0])
 	case builtins.ExitName:
 		return builtins.Exit()
 	default:
-		return c.nativeExec()
+		return c.nativeExec(cfg)
 	}
 }
