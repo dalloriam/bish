@@ -20,7 +20,15 @@ func ParseCommand(input string) (*Command, error) {
 
 	// Split the input to separate the command and the arguments.
 	// TODO: Fancier argument parsing.
-	args := strings.Split(input, " ")
+	args, err := ParseArguments(input)
+	if err != nil {
+		return nil, err
+	}
+
+	args, err = SubstituteArguments(args)
+	if err != nil {
+		return nil, err
+	}
 
 	return &Command{Cmd: args[0], Arguments: args[1:]}, nil
 }

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/dalloriam/bish/version"
+
 	"github.com/dalloriam/bish/bish/command"
 )
 
@@ -26,26 +28,30 @@ func (s *Shell) prompt() string {
 }
 
 func (s *Shell) err(err error) {
-	s.backend.Stderr(fmt.Sprintf("error: %s\n", err.Error()))
+	s.backend.Stderr(fmt.Sprintf("%s\n", err.Error()))
 }
 
 // Start starts the main shell loop.
 func (s *Shell) Start() {
+	s.backend.Stdout(fmt.Sprintf("BiSH %s\n", version.VERSION))
 	for {
 		s.backend.Stdout(s.prompt())
 
 		rawLine, err := s.backend.ReadLine()
 		if err != nil {
 			s.err(err)
+			continue
 		}
 
 		cmd, err := command.ParseCommand(rawLine)
 		if err != nil {
 			s.err(err)
+			continue
 		}
 
 		if err := cmd.Execute(); err != nil {
 			s.err(err)
+			continue
 		}
 	}
 }

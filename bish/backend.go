@@ -2,7 +2,7 @@ package bish
 
 type ShellBackend interface {
 	ReadLine() (string, error)
-	Stdout(a ...interface{})
-	Stderr(a ...interface{})
+	Stdout(a string)
+	Stderr(a string)
 	Close() error
 }
