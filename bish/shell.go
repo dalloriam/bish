@@ -43,13 +43,7 @@ func (s *Shell) Start() {
 			continue
 		}
 
-		cmd, err := command.ParseCommand(rawLine)
-		if err != nil {
-			s.err(err)
-			continue
-		}
-
-		if err := cmd.Execute(); err != nil {
+		if err := command.DoCommand(rawLine); err != nil {
 			s.err(err)
 			continue
 		}

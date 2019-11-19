@@ -14,7 +14,7 @@ type Command struct {
 	Arguments []string
 }
 
-func ParseCommand(input string) (*Command, error) {
+func DoCommand(input string) error {
 	// Remove the newline character.
 	input = strings.TrimSuffix(input, "\n")
 
@@ -22,15 +22,16 @@ func ParseCommand(input string) (*Command, error) {
 	// TODO: Fancier argument parsing.
 	args, err := ParseArguments(input)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	args, err = SubstituteArguments(args)
+	planner := NewExecutionPlanner(args)
+	cmd, err := planner.Command(true)
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	return &Command{Cmd: args[0], Arguments: args[1:]}, nil
+	_, err = cmd.Evaluate()
+	return err
 }
 
 func (c *Command) nativeExec() error {

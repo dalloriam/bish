@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 	"unicode"
 )
@@ -47,17 +48,11 @@ func ParseArguments(in string) ([]string, error) {
 	inLiteralBlock := false
 	var literalChar rune
 
-	inEscape := false
-
-	for i, currentChar := range in {
-		fmt.Println(string(currentChar))
+	for i := 0; i < len(in); i++ {
+		currentChar := rune(in[i])
 
 		if currentChar == '\\' {
-			fmt.Println("Escaping")
-			inEscape = true
-		} else if inEscape {
-			fmt.Println("Stopping escape")
-			inEscape = false
+			in = string(append([]rune(in[:i]), []rune(in[i+1:])...))
 			continue
 		}
 
@@ -66,7 +61,19 @@ func ParseArguments(in string) ([]string, error) {
 				inLiteralBlock = false
 				tokens = append(tokens, in[tokenStart:i])
 				lookingForTokenEnd = true
+				if currentChar == '>' {
+					// We're closing an expression block -- not shellcode.
+					tokens = append(tokens, ">")
+				}
 			}
+			continue
+		}
+
+		if currentChar == '<' {
+			inLiteralBlock = true
+			literalChar = '>'
+			tokenStart = i + 1
+			tokens = append(tokens, string(in[i]))
 			continue
 		}
 
@@ -100,29 +107,25 @@ func ParseArguments(in string) ([]string, error) {
 		tokens = append(tokens, in[tokenStart:charCount])
 	}
 
+	// TODO: Hide under debug setting
 	r, _ := json.Marshal(tokens)
 	fmt.Println("parsed: ", string(r))
 
 	return tokens, nil
 }
 
-// SubstituteArguments performs env substitution.
-func SubstituteArguments(in []string) ([]string, error) {
-	var vals []string
-
-	for i, val := range in {
-
-		if strings.HasPrefix(val, "$") {
-			key := val[1:]
-			in[i] = os.Getenv(key)
-			val = os.Getenv(key)
-			vals = append(vals, val)
-		} else {
-			vals = append(vals, val)
-		}
-
+func substituteEnvironmentVariables(argument string) string {
+	pattern := regexp.MustCompile(`\$[a-zA-Z0-9]+`)
+	matches := pattern.FindAllString(argument, -1)
+	for _, match := range matches {
+		key := os.Getenv(match[1:])
+		argument = strings.ReplaceAll(argument, match, key)
 	}
-	r, _ := json.Marshal(vals)
-	fmt.Println("subbed: ", string(r))
-	return vals, nil
+	return argument
+}
+
+// ProcessArg performs env substitution.
+func ProcessArg(arg string) (string, error) {
+	arg = substituteEnvironmentVariables(arg)
+	return arg, nil
 }
