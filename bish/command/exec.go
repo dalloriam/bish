@@ -97,6 +97,10 @@ func (p *ExecutionPlanner) Command(topLevel bool) (Command, error) {
 			fmt.Println("Executing Pipe")
 			aCmd := &CommandTree{
 				Args: argumentBuffer,
+				StdOut: os.Stdout,
+				StdErr: os.Stderr,
+				StdIn: os.Stdin,
+				Shell: true,
 			}
 			bCmd, err := p.Command(true)
 			if err != nil {
@@ -108,7 +112,7 @@ func (p *ExecutionPlanner) Command(topLevel bool) (Command, error) {
 				StdOut: os.Stdout,
 				StdErr: os.Stderr,
 				StdIn: os.Stdin,
-				Shell:false,
+				Shell:true,
 			}, nil
 		}
 	}

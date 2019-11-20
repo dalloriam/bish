@@ -33,7 +33,7 @@ type PipeCommand struct {
 	StdErr io.Writer
 	StdIn  io.Reader
 
-	buf bytes.Buffer
+	buf       bytes.Buffer
 	pipeWrite *io.PipeWriter
 }
 
@@ -58,7 +58,6 @@ func (c *PipeCommand) Start() error {
 	c.SrcCommand.Bind(c.StdIn, w, c.StdErr)
 	c.DstCommand.Bind(r, dstStdout, c.StdErr)
 
-
 	if err := c.SrcCommand.Start(); err != nil {
 		return err
 	}
@@ -71,6 +70,10 @@ func (c *PipeCommand) Wait() (string, error) {
 	}
 
 	if err := c.pipeWrite.Close(); err != nil {
+		return "", err
+	}
+
+	if _, err := c.DstCommand.Wait(); err != nil {
 		return "", err
 	}
 
@@ -91,4 +94,3 @@ func (c *PipeCommand) Evaluate() (string, error) {
 	}
 	return c.Wait()
 }
-

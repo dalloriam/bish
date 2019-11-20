@@ -1,9 +1,9 @@
 package command
 
 import (
-	"fmt"
 	"strings"
 )
+
 func DoCommand(input string) error {
 	// Remove the newline character.
 	input = strings.TrimSuffix(input, "\n")
@@ -20,7 +20,6 @@ func DoCommand(input string) error {
 	if err != nil {
 		return err
 	}
-	v, err := cmd.Evaluate()
-	fmt.Println("SYNC OUTPUT: ", v)
+	_, err = cmd.Evaluate()
 	return err
 }
