@@ -1,59 +1,94 @@
 package command
 
 import (
-	"os"
-	"os/exec"
-	"strings"
-
-	"github.com/dalloriam/bish/bish/builtins"
+	"bytes"
+	"io"
+	"io/ioutil"
 )
 
-// Command represents a command to execute.
-type Command struct {
-	Cmd       string
-	Arguments []string
+/*
+Command  :- Argument [Argument...] [>> file]
+		 |- Command | Command
+
+Argument :- String
+		 |- ( Command )
+		 |- < String >
+*/
+
+type Command interface {
+	Argument
+
+	Bind(stdin io.Reader, stdout, stderr io.Writer)
+
+	Start() error
+	Wait() (string, error)
 }
 
-func DoCommand(input string) error {
-	// Remove the newline character.
-	input = strings.TrimSuffix(input, "\n")
+type PipeCommand struct {
+	SrcCommand Command
+	DstCommand Command
 
-	// Split the input to separate the command and the arguments.
-	// TODO: Fancier argument parsing.
-	args, err := ParseArguments(input)
-	if err != nil {
+	Shell  bool
+	StdOut io.Writer
+	StdErr io.Writer
+	StdIn  io.Reader
+
+	buf bytes.Buffer
+	pipeWrite *io.PipeWriter
+}
+
+func (c *PipeCommand) Bind(stdin io.Reader, stdout, stderr io.Writer) {
+	c.StdIn = stdin
+	c.StdOut = stdout
+	c.StdErr = stderr
+}
+
+func (c *PipeCommand) Start() error {
+	r, w := io.Pipe()
+	c.pipeWrite = w
+
+	var dstStdout io.Writer
+
+	if c.Shell {
+		dstStdout = c.StdOut
+	} else {
+		dstStdout = &c.buf
+	}
+
+	c.SrcCommand.Bind(c.StdIn, w, c.StdErr)
+	c.DstCommand.Bind(r, dstStdout, c.StdErr)
+
+
+	if err := c.SrcCommand.Start(); err != nil {
 		return err
 	}
+	return c.DstCommand.Start()
+}
 
-	planner := NewExecutionPlanner(args)
-	cmd, err := planner.Command(true)
-	if err != nil {
-		return err
+func (c *PipeCommand) Wait() (string, error) {
+	if _, err := c.SrcCommand.Wait(); err != nil {
+		return "", err
 	}
-	_, err = cmd.Evaluate()
-	return err
-}
 
-func (c *Command) nativeExec() error {
-	// Pass the program and the arguments separately.
-	cmd := exec.Command(c.Cmd, c.Arguments...)
-
-	// Set the correct output device.
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
-
-	// Execute the command and return the error.
-	return cmd.Run()
-}
-
-// Execute executes the command.
-func (c *Command) Execute() error {
-	switch c.Cmd {
-	case builtins.CdName:
-		return builtins.ChangeDirectory(c.Arguments[0])
-	case builtins.ExitName:
-		return builtins.Exit()
-	default:
-		return c.nativeExec()
+	if err := c.pipeWrite.Close(); err != nil {
+		return "", err
 	}
+
+	var out string
+	if !c.Shell {
+		data, err := ioutil.ReadAll(&c.buf)
+		if err != nil {
+			return "", err
+		}
+		out = string(data)
+	}
+	return out, nil
 }
+
+func (c *PipeCommand) Evaluate() (string, error) {
+	if err := c.Start(); err != nil {
+		return "", err
+	}
+	return c.Wait()
+}
+

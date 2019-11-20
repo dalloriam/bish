@@ -2,6 +2,7 @@ package command
 
 import (
 	"errors"
+	"fmt"
 	"os"
 )
 
@@ -46,6 +47,7 @@ func (p *ExecutionPlanner) Argument() (Argument, error) {
 		if err != nil {
 			return nil, err
 		}
+		fmt.Println("Subcommand: ", subcmd)
 		if !p.accept(")") {
 			return nil, errors.New("no closing paren")
 		}
@@ -69,16 +71,17 @@ func (p *ExecutionPlanner) Argument() (Argument, error) {
 	}
 }
 
-func (p *ExecutionPlanner) Command(topLevel bool) (Argument, error) {
+func (p *ExecutionPlanner) Command(topLevel bool) (Command, error) {
 	var argumentBuffer []Argument
 	for {
+
 		arg, err := p.Argument()
 		if err != nil {
 			return nil, err
 		}
 		argumentBuffer = append(argumentBuffer, arg)
 
-		if p.done {
+		if p.done || *p.nextTok == ")" || *p.nextTok == ">" {
 			baseCmd := &CommandTree{
 				Args: argumentBuffer,
 			}
@@ -90,6 +93,23 @@ func (p *ExecutionPlanner) Command(topLevel bool) (Argument, error) {
 				baseCmd.StdIn = os.Stdin
 			}
 			return baseCmd, nil
+		} else if p.accept("|") {
+			fmt.Println("Executing Pipe")
+			aCmd := &CommandTree{
+				Args: argumentBuffer,
+			}
+			bCmd, err := p.Command(true)
+			if err != nil {
+				return nil, err
+			}
+			return &PipeCommand{
+				SrcCommand:aCmd,
+				DstCommand:bCmd,
+				StdOut: os.Stdout,
+				StdErr: os.Stderr,
+				StdIn: os.Stdin,
+				Shell:false,
+			}, nil
 		}
 	}
 }
