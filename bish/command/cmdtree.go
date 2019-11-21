@@ -2,16 +2,18 @@ package command
 
 import (
 	"bytes"
-	"fmt"
-	"github.com/dalloriam/bish/bish/builtins"
 	"io"
 	"io/ioutil"
+	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/dalloriam/bish/bish/builtins"
 )
 
 type CommandTree struct {
 	Args []Argument
+	Ctx  ShellContext
 
 	Shell  bool
 	StdOut io.Writer
@@ -35,7 +37,11 @@ func (c *CommandTree) parseArguments() ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		args = append(args, aVal)
+		aVals, err := ProcessArg(aVal, c.Ctx)
+		if err != nil {
+			return nil, err
+		}
+		args = append(args, aVals...)
 	}
 	return args, nil
 }
@@ -46,7 +52,10 @@ func (c *CommandTree) Start() error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("Args: ", args)
+	_, ok, err := c.tryForBuiltIn(args)
+	if ok {
+		return err
+	}
 	c.cmd = exec.Command(args[0], args[1:]...)
 
 	var stdout io.Writer
@@ -61,12 +70,17 @@ func (c *CommandTree) Start() error {
 	c.cmd.Stdout = stdout
 	c.cmd.Stdin = c.StdIn
 
-
-
 	return c.cmd.Start()
 }
 
 func (c *CommandTree) Wait() (string, error) {
+	if c.cmd == nil {
+		data, err := ioutil.ReadAll(&c.buf)
+		if err != nil {
+			return "", err
+		}
+		return string(data), nil
+	}
 	if c.Shell {
 		return "", c.cmd.Wait()
 	}
@@ -96,11 +110,21 @@ func (c *CommandTree) nativeExec(args []string) (string, error) {
 func (c *CommandTree) tryForBuiltIn(args []string) (string, bool, error) {
 	switch args[0] {
 	case builtins.CdName:
-		return "", true, builtins.ChangeDirectory(args[1])
+		return "", true, builtins.ChangeDirectory(args[1:])
 	case builtins.ExitName:
 		return "", true, builtins.Exit()
+	case builtins.AliasName:
+		return "", true, builtins.Alias(c.Ctx, args[1:])
 	}
 	return "", false, nil
+}
+
+func (c *CommandTree) Signal(s os.Signal) {
+	if c.cmd != nil && c.cmd.ProcessState != nil && !c.cmd.ProcessState.Exited() {
+		if err := c.cmd.Process.Signal(s); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (c *CommandTree) Evaluate() (string, error) {

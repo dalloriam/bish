@@ -1,23 +1,5 @@
-export GOPATH=~
-export PKG=$(basename $(pwd))
-
 build:
-    export VERSION=$(cat VERSION.txt)
-    export GITCOMMIT=$(git rev-parse --short HEAD)
-    export GITUNTRACKEDCHANGES=$(git status --porcelain --untracked-files=no)
+    make build
 
-    if [ "$GITUNTRACKEDCHANGES" != "" ]; then
-        GITCOMMIT=$GITCOMMIT-dirty
-    fi
-    if [ "$GITCOMMIT" == "" ]; then
-        GITCOMMIT=$GITHUB_SHA
-    fi
-
-    CTIMEVAR="-X $PKG/version.GITCOMMIT=$GITCOMMIT -X $PKG/version.VERSION=$VERSION"
-
-    CGO_ENABLED=0 go build \
-        -o ./bin/bish \
-        -a -tags "static_build netgo" \
-        -installsuffix netgo \
-        -ldflags "-w $CTIMEVAR -extldflags -static" \
-         ./cmd/bish;
+install:
+    make install

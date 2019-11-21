@@ -1,8 +1,11 @@
 package bish
 
+import "io"
+
 type ShellBackend interface {
 	ReadLine() (string, error)
-	Stdout(a string)
-	Stderr(a string)
+	Stdout() io.Writer
+	Stderr() io.Writer
+	Stdin() io.Reader
 	Close() error
 }

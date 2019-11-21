@@ -1,11 +1,11 @@
 package main
 
 import (
-	"fmt"
+	"io"
+	"os"
 
 	"github.com/chzyer/readline"
 	"github.com/dalloriam/bish/bish"
-	. "github.com/logrusorgru/aurora"
 )
 
 type TerminalBackend struct {
@@ -21,12 +21,16 @@ func newBackend() (*TerminalBackend, error) {
 	return &TerminalBackend{rl: rl}, nil
 }
 
-func (t *TerminalBackend) Stderr(a string) {
-	fmt.Fprint(t.rl.Stderr(), Red(a))
+func (t *TerminalBackend) Stderr() io.Writer {
+	return os.Stderr
 }
 
-func (t *TerminalBackend) Stdout(a string) {
-	fmt.Fprint(t.rl.Stdout(), a)
+func (t *TerminalBackend) Stdin() io.Reader {
+	return os.Stdin
+}
+
+func (t *TerminalBackend) Stdout() io.Writer {
+	return os.Stdout
 }
 
 func (t *TerminalBackend) ReadLine() (string, error) {

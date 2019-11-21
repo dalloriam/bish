@@ -1,0 +1,15 @@
+* Tab-completion
+* .bishrc & .bishrc.d/
+	=> Requires script files support
+* Parallel commands
+* Output redirection
+* Prompt customization
+* Native docker support
+	=> Shell cmd bindings
+	=> ps -D / kill
+* Python expression evaluation
+	=> Use which python interpreter?
+		-> Bundle one?
+		-> Implement one?
+		-> Use default env one?
+		-> Expose setting?

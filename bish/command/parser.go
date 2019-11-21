@@ -1,12 +1,14 @@
 package command
 
 import (
-	"encoding/json"
-	"fmt"
+	"errors"
 	"os"
+	"os/user"
 	"regexp"
 	"strings"
 	"unicode"
+
+	"github.com/dalloriam/bish/bish/builtins"
 )
 
 var keepChars = []rune{'(', ')', '[', ']', '!', ';', '|', '>', '<'}
@@ -103,13 +105,13 @@ func ParseArguments(in string) ([]string, error) {
 		}
 
 	}
-	if !lookingForTokenEnd && charCount-1 >= (tokenStart+1) {
+	if !lookingForTokenEnd && charCount >= (tokenStart+1) {
 		tokens = append(tokens, in[tokenStart:charCount])
 	}
 
 	// TODO: Hide under debug setting
-	r, _ := json.Marshal(tokens)
-	fmt.Println("parsed: ", string(r))
+	//r, _ := json.Marshal(tokens)
+	//fmt.Println("parsed: ", string(r))
 
 	return tokens, nil
 }
@@ -124,8 +126,44 @@ func substituteEnvironmentVariables(argument string) string {
 	return argument
 }
 
+func substituteHome(arg string) (string, error) {
+	usr, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+	return strings.ReplaceAll(arg, "~", usr.HomeDir), nil
+}
+
+func substituteAliases(ctx ShellContext, arg string) ([]string, error) {
+	var out []string
+	if v, ok := ctx.GetKey(builtins.AliasContextKey, arg); ok {
+		if s, sOk := v.(string); sOk {
+			out = append(out, s)
+		} else if ss, ssOk := v.([]string); ssOk {
+			out = append(out, ss...)
+		} else {
+			return nil, errors.New("invalid alias")
+		}
+	} else {
+		out = append(out, arg)
+	}
+
+	return out, nil
+}
+
 // ProcessArg performs env substitution.
-func ProcessArg(arg string) (string, error) {
-	arg = substituteEnvironmentVariables(arg)
-	return arg, nil
+func ProcessArg(arg string, ctx ShellContext) ([]string, error) {
+	args, err := substituteAliases(ctx, arg)
+
+	for i, arg := range args {
+		arg = substituteEnvironmentVariables(arg)
+		arg, err = substituteHome(arg)
+		if err != nil {
+			return nil, err
+		}
+
+		args[i] = arg
+	}
+
+	return args, err
 }

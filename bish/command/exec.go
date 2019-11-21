@@ -3,11 +3,22 @@ package command
 import (
 	"errors"
 	"fmt"
-	"os"
 )
+
+/*
+Grammar:
+	Command  :- Argument [Argument...]
+			 |- Command | Command
+
+	Argument :- String
+			 |- ( Command )
+			 |- < String >
+*/
 
 type ExecutionPlanner struct {
 	Args []string
+
+	ctx ShellContext
 
 	idx        int
 	currentTok *string
@@ -15,8 +26,8 @@ type ExecutionPlanner struct {
 	done       bool
 }
 
-func NewExecutionPlanner(args []string) *ExecutionPlanner {
-	e := &ExecutionPlanner{Args: args}
+func NewExecutionPlanner(ctx ShellContext, args []string) *ExecutionPlanner {
+	e := &ExecutionPlanner{Args: args, ctx: ctx}
 
 	e.advance()
 
@@ -63,14 +74,11 @@ func (p *ExecutionPlanner) Argument() (Argument, error) {
 
 	} else {
 		p.advance()
-		arg, err := ProcessArg(*p.currentTok)
-		if err != nil {
-			return nil, err
-		}
-		return &StringArgument{arg}, nil
+		return &StringArgument{*p.currentTok}, nil
 	}
 }
 
+// Command reads a command from the current execution plan.
 func (p *ExecutionPlanner) Command(topLevel bool) (Command, error) {
 	var argumentBuffer []Argument
 	for {
@@ -84,35 +92,26 @@ func (p *ExecutionPlanner) Command(topLevel bool) (Command, error) {
 		if p.done || *p.nextTok == ")" || *p.nextTok == ">" {
 			baseCmd := &CommandTree{
 				Args: argumentBuffer,
+				Ctx:  p.ctx,
 			}
 			if topLevel {
-				// TODO: Plug this to shell settings.
 				baseCmd.Shell = true
-				baseCmd.StdOut = os.Stdout
-				baseCmd.StdErr = os.Stderr
-				baseCmd.StdIn = os.Stdin
 			}
 			return baseCmd, nil
 		} else if p.accept("|") {
-			fmt.Println("Executing Pipe")
 			aCmd := &CommandTree{
-				Args: argumentBuffer,
-				StdOut: os.Stdout,
-				StdErr: os.Stderr,
-				StdIn: os.Stdin,
+				Args:  argumentBuffer,
 				Shell: true,
+				Ctx:   p.ctx,
 			}
 			bCmd, err := p.Command(true)
 			if err != nil {
 				return nil, err
 			}
 			return &PipeCommand{
-				SrcCommand:aCmd,
-				DstCommand:bCmd,
-				StdOut: os.Stdout,
-				StdErr: os.Stderr,
-				StdIn: os.Stdin,
-				Shell:true,
+				SrcCommand: aCmd,
+				DstCommand: bCmd,
+				Shell:      true,
 			}, nil
 		}
 	}
