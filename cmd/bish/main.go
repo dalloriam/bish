@@ -4,6 +4,8 @@ import (
 	"io"
 	"os"
 
+	"github.com/dalloriam/bish/bish/completion"
+
 	"github.com/chzyer/readline"
 	"github.com/dalloriam/bish/bish"
 )
@@ -18,6 +20,7 @@ func newBackend() (*TerminalBackend, error) {
 		return nil, err
 	}
 
+	rl.Config.AutoComplete = completion.New()
 	return &TerminalBackend{rl: rl}, nil
 }
 
