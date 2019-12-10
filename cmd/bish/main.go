@@ -4,8 +4,6 @@ import (
 	"io"
 	"os"
 
-	"github.com/dalloriam/bish/bish/completion"
-
 	"github.com/chzyer/readline"
 	"github.com/dalloriam/bish/bish"
 )
@@ -20,8 +18,15 @@ func newBackend() (*TerminalBackend, error) {
 		return nil, err
 	}
 
-	rl.Config.AutoComplete = completion.New()
 	return &TerminalBackend{rl: rl}, nil
+}
+
+func (t *TerminalBackend) UpdatePrompt(prompt string) {
+	t.rl.SetPrompt(prompt)
+}
+
+func (t *TerminalBackend) SetConfig(c readline.AutoCompleter) {
+	t.rl.Config.AutoComplete = c
 }
 
 func (t *TerminalBackend) Stderr() io.Writer {
@@ -52,6 +57,7 @@ func shellStart() {
 	defer backend.Close()
 
 	shell := bish.New(backend)
+	backend.SetConfig(shell.CompletionProvider)
 	shell.Start()
 }
 
