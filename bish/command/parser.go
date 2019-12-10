@@ -40,9 +40,17 @@ func isKeepChar(ch rune) (ok bool) {
 	return
 }
 
-func ParseArguments(in string) ([]string, error) {
-	var tokens []string
+func applySupportedEscapes(in string) string {
+	in = strings.ReplaceAll(in, "\\n", "\n")
+	return strings.ReplaceAll(in, "\\t", "\t")
+}
 
+func ParseArguments(in string) ([]string, error) {
+	// Pre-process input to convert supported escapes.
+	// Eg. []rune{'\', 'n'} => []rune{'\n'}
+	in = applySupportedEscapes(in)
+
+	var tokens []string
 	tokenStart := 0
 	charCount := len(in)
 	lookingForTokenEnd := false
@@ -53,7 +61,7 @@ func ParseArguments(in string) ([]string, error) {
 	for i := 0; i < len(in); i++ {
 		currentChar := rune(in[i])
 
-		if currentChar == '\\' {
+		if currentChar == '\\' && i+1 < len(in) {
 			in = string(append([]rune(in[:i]), []rune(in[i+1:])...))
 			continue
 		}
