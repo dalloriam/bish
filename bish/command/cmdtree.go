@@ -115,6 +115,8 @@ func (c *CommandTree) tryForBuiltIn(args []string) (string, bool, error) {
 		return "", true, builtins.Exit()
 	case builtins.AliasName:
 		return "", true, builtins.Alias(c.Ctx, args[1:])
+	case builtins.PromptName:
+		return "", true, builtins.Prompt(c.Ctx, args[1])
 	}
 	return "", false, nil
 }

@@ -21,11 +21,13 @@ func DoCommand(req CommandRequest) error {
 	// Remove the newline character.
 	input := strings.TrimSuffix(req.UserInput, "\n")
 
-	// Split the input to separate the command and the arguments.
-	// TODO: Fancier argument parsing.
 	args, err := ParseArguments(input)
 	if err != nil {
 		return err
+	}
+
+	if len(args) == 0 {
+		return nil
 	}
 
 	planner := NewExecutionPlanner(req.Context, args)

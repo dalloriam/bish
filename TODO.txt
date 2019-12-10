@@ -1,4 +1,6 @@
 * Tab-completion
+* Notify on command done
+  - Example: sleep 10!
 * .bishrc & .bishrc.d/
 	=> Requires script files support
 * Parallel commands
