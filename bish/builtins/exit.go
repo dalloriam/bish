@@ -2,7 +2,10 @@ package builtins
 
 import "os"
 
-const ExitName = "exit"
+// Name of the exit builtin.
+const (
+	ExitName = "exit"
+)
 
 // Exit exits the shell.
 func Exit() error {
