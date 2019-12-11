@@ -6,10 +6,12 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+
+	"github.com/dalloriam/bish/bish/state"
 )
 
 type CommandRequest struct {
-	Context   ShellContext
+	Context   *state.State
 	UserInput string
 
 	Stdin  io.Reader
@@ -17,9 +19,9 @@ type CommandRequest struct {
 	Stderr io.Writer
 }
 
-func DoCommand(req CommandRequest) error {
+func (c *CommandRequest) Execute() error {
 	// Remove the newline character.
-	input := strings.TrimSuffix(req.UserInput, "\n")
+	input := strings.TrimSuffix(c.UserInput, "\n")
 
 	args, err := ParseArguments(input)
 	if err != nil {
@@ -30,13 +32,13 @@ func DoCommand(req CommandRequest) error {
 		return nil
 	}
 
-	planner := NewExecutionPlanner(req.Context, args)
+	planner := NewExecutionPlanner(c.Context, args)
 	cmd, err := planner.Command(true)
 	if err != nil {
 		return err
 	}
 
-	cmd.Bind(req.Stdin, req.Stdout, req.Stderr)
+	cmd.Bind(c.Stdin, c.Stdout, c.Stderr)
 
 	if err := cmd.Start(); err != nil {
 		return err

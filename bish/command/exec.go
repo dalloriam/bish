@@ -3,6 +3,10 @@ package command
 import (
 	"errors"
 	"fmt"
+
+	"github.com/dalloriam/bish/bish/hooks"
+
+	"github.com/dalloriam/bish/bish/state"
 )
 
 /*
@@ -16,9 +20,9 @@ Grammar:
 */
 
 type ExecutionPlanner struct {
-	Args []string
-
-	ctx ShellContext
+	Args  []string
+	ctx   *state.State
+	hooks []hooks.Hook
 
 	idx        int
 	currentTok *string
@@ -26,7 +30,7 @@ type ExecutionPlanner struct {
 	done       bool
 }
 
-func NewExecutionPlanner(ctx ShellContext, args []string) *ExecutionPlanner {
+func NewExecutionPlanner(ctx *state.State, args []string) *ExecutionPlanner {
 	e := &ExecutionPlanner{Args: args, ctx: ctx}
 
 	e.advance()

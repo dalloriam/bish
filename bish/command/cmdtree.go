@@ -8,12 +8,14 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/dalloriam/bish/bish/state"
+
 	"github.com/dalloriam/bish/bish/builtins"
 )
 
 type CommandTree struct {
 	Args []Argument
-	Ctx  ShellContext
+	Ctx  *state.State
 
 	Shell  bool
 	StdOut io.Writer
@@ -56,6 +58,10 @@ func (c *CommandTree) Start() error {
 	if ok {
 		return err
 	}
+	// Run hooks.
+	for _, hk := range c.Ctx.Hooks() {
+		args = hk.Apply(args)
+	}
 	c.cmd = exec.Command(args[0], args[1:]...)
 
 	var stdout io.Writer
@@ -92,6 +98,11 @@ func (c *CommandTree) Wait() (string, error) {
 }
 
 func (c *CommandTree) nativeExec(args []string) (string, error) {
+	// Run hooks.
+	for _, hk := range c.Ctx.Hooks() {
+		args = hk.Apply(args)
+	}
+
 	if c.Shell {
 		if err := c.Start(); err != nil {
 			return "", err
@@ -117,6 +128,8 @@ func (c *CommandTree) tryForBuiltIn(args []string) (string, bool, error) {
 		return "", true, builtins.Alias(c.Ctx, args[1:])
 	case builtins.PromptName:
 		return "", true, builtins.Prompt(c.Ctx, args[1])
+	case builtins.HookName:
+		return "", true, builtins.Hook(c.Ctx, args[1:])
 	}
 	return "", false, nil
 }

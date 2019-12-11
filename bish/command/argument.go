@@ -1,6 +1,15 @@
 package command
 
-import "errors"
+import (
+	"fmt"
+
+	"go.starlark.net/starlark"
+)
+
+var t = &starlark.Thread{
+	Name:  "hook",
+	Print: func(_ *starlark.Thread, msg string) { fmt.Println(msg) },
+}
 
 type Argument interface {
 	Evaluate() (string, error)
@@ -19,5 +28,12 @@ type PythonArgument struct {
 }
 
 func (a *PythonArgument) Evaluate() (string, error) {
-	return "", errors.New("pythonArg not implemented")
+	v, err := starlark.Eval(t, "arg", a.Source, nil)
+	if err != nil {
+		return "", err
+	}
+	if s, ok := v.(starlark.String); ok {
+		return string(s), nil
+	}
+	return v.String(), nil
 }

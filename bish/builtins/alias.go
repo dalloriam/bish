@@ -1,18 +1,17 @@
 package builtins
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/dalloriam/bish/bish/state"
+)
 
 const (
 	AliasName       = "alias"
 	AliasContextKey = "alias"
 )
 
-type ShellContext interface {
-	GetKey(domain string, key string) (interface{}, bool)
-	SetKey(domain string, key string, value interface{})
-}
-
-func Alias(ctx ShellContext, args []string) error {
+func Alias(ctx *state.State, args []string) error {
 	if len(args) < 2 {
 		return errors.New("invalid alias syntax")
 	}

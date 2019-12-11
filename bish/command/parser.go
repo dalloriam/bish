@@ -8,6 +8,8 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/dalloriam/bish/bish/state"
+
 	"github.com/dalloriam/bish/bish/builtins"
 )
 
@@ -142,7 +144,7 @@ func substituteHome(arg string) (string, error) {
 	return strings.ReplaceAll(arg, "~", usr.HomeDir), nil
 }
 
-func substituteAliases(ctx ShellContext, arg string) ([]string, error) {
+func substituteAliases(ctx *state.State, arg string) ([]string, error) {
 	var out []string
 	if v, ok := ctx.GetKey(builtins.AliasContextKey, arg); ok {
 		if s, sOk := v.(string); sOk {
@@ -160,7 +162,7 @@ func substituteAliases(ctx ShellContext, arg string) ([]string, error) {
 }
 
 // ProcessArg performs env substitution.
-func ProcessArg(arg string, ctx ShellContext) ([]string, error) {
+func ProcessArg(arg string, ctx *state.State) ([]string, error) {
 	args, err := substituteAliases(ctx, arg)
 
 	for i, arg := range args {
