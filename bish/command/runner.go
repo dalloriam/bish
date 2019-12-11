@@ -7,15 +7,12 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/dalloriam/bish/bish/hooks"
-
 	"github.com/dalloriam/bish/bish/state"
 )
 
 type CommandRequest struct {
 	Context   *state.State
 	UserInput string
-	Hooks     []hooks.Hook
 
 	Stdin  io.Reader
 	Stdout io.Writer
@@ -35,7 +32,7 @@ func (c *CommandRequest) Execute() error {
 		return nil
 	}
 
-	planner := NewExecutionPlanner(c.Context, c.Hooks, args)
+	planner := NewExecutionPlanner(c.Context, args)
 	cmd, err := planner.Command(true)
 	if err != nil {
 		return err

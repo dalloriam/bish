@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/dalloriam/bish/bish/hooks"
 	"github.com/dalloriam/bish/bish/state"
 
 	"github.com/dalloriam/bish/bish/completion"
@@ -20,7 +19,6 @@ import (
 type Shell struct {
 	backend ShellBackend
 	ctx     *state.State
-	hooks   []hooks.Hook
 
 	CompletionProvider *completion.Completer
 
@@ -93,7 +91,6 @@ func (s *Shell) Start() {
 		}
 		req := command.CommandRequest{
 			Context:   s.ctx,
-			Hooks:     s.hooks,
 			UserInput: rawLine,
 			Stdin:     s.backend.Stdin(),
 			Stdout:    s.backend.Stdout(),

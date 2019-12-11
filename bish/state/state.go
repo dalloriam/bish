@@ -1,16 +1,35 @@
 package state
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/dalloriam/bish/bish/hooks"
+)
 
 // State stores the entire state of the shell.
 type State struct {
-	data map[string]interface{}
-	mtx  sync.RWMutex
+	data  map[string]interface{}
+	hooks map[string]hooks.Hook
+	mtx   sync.RWMutex
 }
 
 // NewContext returns a new shell context store.
 func New() *State {
-	return &State{data: make(map[string]interface{})}
+	return &State{data: make(map[string]interface{}), hooks: make(map[string]hooks.Hook)}
+}
+
+func (c *State) AddHook(name string, hk hooks.Hook) {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+	c.hooks[name] = hk
+}
+
+func (c *State) Hooks() []hooks.Hook {
+	var hks []hooks.Hook
+	for _, v := range c.hooks {
+		hks = append(hks, v)
+	}
+	return hks
 }
 
 // GetKey reads & returns a key from the context store.

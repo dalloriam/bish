@@ -30,8 +30,8 @@ type ExecutionPlanner struct {
 	done       bool
 }
 
-func NewExecutionPlanner(ctx *state.State, hooks []hooks.Hook, args []string) *ExecutionPlanner {
-	e := &ExecutionPlanner{Args: args, ctx: ctx, hooks: hooks}
+func NewExecutionPlanner(ctx *state.State, args []string) *ExecutionPlanner {
+	e := &ExecutionPlanner{Args: args, ctx: ctx}
 
 	e.advance()
 
@@ -95,9 +95,8 @@ func (p *ExecutionPlanner) Command(topLevel bool) (Command, error) {
 
 		if p.done || *p.nextTok == ")" || *p.nextTok == ">" {
 			baseCmd := &CommandTree{
-				Args:  argumentBuffer,
-				Ctx:   p.ctx,
-				Hooks: p.hooks,
+				Args: argumentBuffer,
+				Ctx:  p.ctx,
 			}
 			if topLevel {
 				baseCmd.Shell = true
@@ -108,7 +107,6 @@ func (p *ExecutionPlanner) Command(topLevel bool) (Command, error) {
 				Args:  argumentBuffer,
 				Shell: true,
 				Ctx:   p.ctx,
-				Hooks: p.hooks,
 			}
 			bCmd, err := p.Command(true)
 			if err != nil {
