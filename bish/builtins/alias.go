@@ -6,6 +6,7 @@ import (
 	"github.com/dalloriam/bish/bish/state"
 )
 
+// Attributes of the alias commands.
 const (
 	AliasName       = "alias"
 	AliasContextKey = "alias"

@@ -130,6 +130,8 @@ func (c *CommandTree) tryForBuiltIn(args []string) (string, bool, error) {
 		return "", true, builtins.Prompt(c.Ctx, args[1])
 	case builtins.HookName:
 		return "", true, builtins.Hook(c.Ctx, args[1:])
+	case builtins.SetEnvName:
+		return "", true, builtins.SetEnv(args[1:])
 	}
 	return "", false, nil
 }

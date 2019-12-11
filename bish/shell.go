@@ -12,7 +12,7 @@ import (
 	"github.com/dalloriam/bish/bish/completion"
 
 	"github.com/dalloriam/bish/bish/command"
-	. "github.com/logrusorgru/aurora"
+	cl "github.com/logrusorgru/aurora"
 )
 
 // Shell is the root bish shell struct.
@@ -65,7 +65,7 @@ func (s *Shell) prompt() []string {
 }
 
 func (s *Shell) err(err error) {
-	_, err = s.backend.Stderr().Write([]byte(fmt.Sprintf("! %s\n", Red(err.Error()))))
+	_, err = s.backend.Stderr().Write([]byte(fmt.Sprintf("! %s\n", cl.Red(err.Error()))))
 	return
 }
 

@@ -6,7 +6,10 @@ import (
 	"os/user"
 )
 
-const CdName = "cd"
+// Name of the cd command.
+const (
+	CdName = "cd"
+)
 
 // ChangeDirectory changes the directory.
 func ChangeDirectory(args []string) error {
