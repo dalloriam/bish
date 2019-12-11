@@ -8,12 +8,17 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/dalloriam/bish/bish/hooks"
+
+	"github.com/dalloriam/bish/bish/state"
+
 	"github.com/dalloriam/bish/bish/builtins"
 )
 
 type CommandTree struct {
-	Args []Argument
-	Ctx  ShellContext
+	Args  []Argument
+	Ctx   *state.State
+	Hooks []hooks.Hook
 
 	Shell  bool
 	StdOut io.Writer
@@ -56,6 +61,10 @@ func (c *CommandTree) Start() error {
 	if ok {
 		return err
 	}
+	// Run hooks.
+	for _, hk := range c.Hooks {
+		args = hk.Apply(args)
+	}
 	c.cmd = exec.Command(args[0], args[1:]...)
 
 	var stdout io.Writer
@@ -92,6 +101,11 @@ func (c *CommandTree) Wait() (string, error) {
 }
 
 func (c *CommandTree) nativeExec(args []string) (string, error) {
+	// Run hooks.
+	for _, hk := range c.Hooks {
+		args = hk.Apply(args)
+	}
+
 	if c.Shell {
 		if err := c.Start(); err != nil {
 			return "", err

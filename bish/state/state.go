@@ -1,22 +1,20 @@
-package bish
+package state
 
-import (
-	"sync"
-)
+import "sync"
 
-// ContextStore stores the current context of the shell.
-type ContextStore struct {
+// State stores the entire state of the shell.
+type State struct {
 	data map[string]interface{}
 	mtx  sync.RWMutex
 }
 
 // NewContext returns a new shell context store.
-func NewContext() *ContextStore {
-	return &ContextStore{data: make(map[string]interface{})}
+func New() *State {
+	return &State{data: make(map[string]interface{})}
 }
 
 // GetKey reads & returns a key from the context store.
-func (c *ContextStore) GetKey(domain string, key string) (interface{}, bool) {
+func (c *State) GetKey(domain string, key string) (interface{}, bool) {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
 
@@ -25,7 +23,7 @@ func (c *ContextStore) GetKey(domain string, key string) (interface{}, bool) {
 	return v, ok
 }
 
-func (c *ContextStore) SetKey(domain string, key string, value interface{}) {
+func (c *State) SetKey(domain string, key string, value interface{}) {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
 

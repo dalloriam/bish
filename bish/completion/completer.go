@@ -3,22 +3,19 @@ package completion
 import (
 	"strings"
 
+	"github.com/dalloriam/bish/bish/state"
+
 	"github.com/dalloriam/bish/bish/command"
 )
 
 // Completer applies all autocompletion.
 // It conforms to the Autocompleter interface of readline.
 type Completer struct {
-	ctx ShellContxt
-}
-
-type ShellContxt interface {
-	GetKey(domain string, key string) (interface{}, bool)
-	SetKey(domain string, key string, value interface{})
+	ctx *state.State
 }
 
 // New returns a new completion engine.
-func New(ctx ShellContxt) *Completer {
+func New(ctx *state.State) *Completer {
 	return &Completer{ctx: ctx}
 }
 

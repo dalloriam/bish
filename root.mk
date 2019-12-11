@@ -68,7 +68,7 @@ build: cmd/$(NAME) VERSION.txt prebuild
 .PHONY: fmt
 fmt:
 	@echo "+ $@"
-	@if [[ ! -z "$(shell gofmt -s -l . | grep -v '.pb.go:' | grep -v '.twirp.go:' | grep -v vendor | tee /dev/stderr)" ]]; then \
+	@if [[ ! -z "$(shell go fmt ./... | grep -v '.pb.go:' | grep -v '.twirp.go:' | grep -v vendor | tee /dev/stderr)" ]]; then \
 		exit 1; \
 	fi
 

@@ -7,6 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/dalloriam/bish/bish/hooks"
+	"github.com/dalloriam/bish/bish/state"
+
 	"github.com/dalloriam/bish/bish/completion"
 
 	"github.com/dalloriam/bish/bish/command"
@@ -16,7 +19,8 @@ import (
 // Shell is the root bish shell struct.
 type Shell struct {
 	backend ShellBackend
-	ctx     *ContextStore
+	ctx     *state.State
+	hooks   []hooks.Hook
 
 	CompletionProvider *completion.Completer
 
@@ -25,7 +29,7 @@ type Shell struct {
 
 // New initializes & returns a new shell instance with the provided IO writers.
 func New(backend ShellBackend) *Shell {
-	ctx := NewContext()
+	ctx := state.New()
 	prompt := "{{.Username}}@{{.Hostname}} [{{.Cwd}}]\n➤ "
 	return &Shell{backend: backend, ctx: ctx, CompletionProvider: completion.New(ctx), promptExpr: prompt}
 }
@@ -87,14 +91,16 @@ func (s *Shell) Start() {
 			s.err(err)
 			continue
 		}
-
-		if err := command.DoCommand(command.CommandRequest{
+		req := command.CommandRequest{
 			Context:   s.ctx,
+			Hooks:     s.hooks,
 			UserInput: rawLine,
 			Stdin:     s.backend.Stdin(),
 			Stdout:    s.backend.Stdout(),
 			Stderr:    s.backend.Stderr(),
-		}); err != nil {
+		}
+
+		if err := req.Execute(); err != nil {
 			s.err(err)
 			continue
 		}
