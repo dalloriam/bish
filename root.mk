@@ -76,7 +76,7 @@ fmt:
 .PHONY: lint
 lint: ## Verifies `golint` passes.
 	@echo "+ $@"
-	@if [[ ! -z "$(shell golint ./... | grep -v '.pb.go:' | grep -v '.twirp.go:' | grep -v vendor | tee /dev/stderr)" ]]; then \
+	@if [[ ! -z "$(shell golint ./... |  tee /dev/stderr)" ]]; then \
 		exit 1; \
 	fi
 

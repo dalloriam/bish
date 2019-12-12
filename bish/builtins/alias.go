@@ -12,6 +12,7 @@ const (
 	AliasContextKey = "alias"
 )
 
+// Alias defines user aliases.
 func Alias(ctx *state.State, args []string) error {
 	if len(args) < 2 {
 		return errors.New("invalid alias syntax")

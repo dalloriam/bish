@@ -9,10 +9,12 @@ import (
 	"github.com/dalloriam/bish/bish/state"
 )
 
+// Name of the hook builtin.
 const (
 	HookName = "hook"
 )
 
+// Hook defines a command hook.
 func Hook(ctx *state.State, args []string) error {
 	if len(args) == 2 {
 		// Setting a hook.

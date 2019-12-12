@@ -89,7 +89,7 @@ func (s *Shell) Start() {
 			s.err(err)
 			continue
 		}
-		req := command.CommandRequest{
+		req := command.Request{
 			Context:   s.ctx,
 			UserInput: rawLine,
 			Stdin:     s.backend.Stdin(),

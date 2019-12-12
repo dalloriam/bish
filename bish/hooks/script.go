@@ -20,6 +20,7 @@ type scriptHook struct {
 	applyCall starlark.Value
 }
 
+// Script returns a new script hook from provided source code.
 func Script(name string, source string) (Hook, error) {
 	s := &scriptHook{
 		Name:   name,
@@ -49,6 +50,7 @@ func (j *scriptHook) runCall(call starlark.Value, args []string) (starlark.Value
 	return v, err
 }
 
+// Apply applies the script hook.
 func (j *scriptHook) Apply(args []string) []string {
 	if j.applyCall == nil {
 		return args

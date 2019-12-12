@@ -13,7 +13,8 @@ import (
 	"github.com/dalloriam/bish/bish/builtins"
 )
 
-type CommandTree struct {
+// Executable represents an actually-executable command.
+type Executable struct {
 	Args []Argument
 	Ctx  *state.State
 
@@ -26,13 +27,14 @@ type CommandTree struct {
 	buf bytes.Buffer
 }
 
-func (c *CommandTree) Bind(stdin io.Reader, stdout, stderr io.Writer) {
+// Bind binds the provided inputs & outputs to the current command.
+func (c *Executable) Bind(stdin io.Reader, stdout, stderr io.Writer) {
 	c.StdOut = stdout
 	c.StdErr = stderr
 	c.StdIn = stdin
 }
 
-func (c *CommandTree) parseArguments() ([]string, error) {
+func (c *Executable) parseArguments() ([]string, error) {
 	var args []string
 	for _, a := range c.Args {
 		aVal, err := a.Evaluate()
@@ -48,21 +50,18 @@ func (c *CommandTree) parseArguments() ([]string, error) {
 	return args, nil
 }
 
-func (c *CommandTree) Start() error {
+// Start starts the command asynchronously.
+func (c *Executable) Start() error {
 	// Render the command arguments
 	args, err := c.parseArguments()
 	if err != nil {
 		return err
 	}
-	_, ok, err := c.tryForBuiltIn(args)
-	if ok {
-		return err
-	}
+
 	// Run hooks.
 	for _, hk := range c.Ctx.Hooks() {
 		args = hk.Apply(args)
 	}
-	c.cmd = exec.Command(args[0], args[1:]...)
 
 	var stdout io.Writer
 	if c.Shell {
@@ -70,6 +69,16 @@ func (c *CommandTree) Start() error {
 	} else {
 		stdout = &c.buf
 	}
+
+	outStr, ok, err := c.tryForBuiltIn(args)
+	if ok {
+		if err != nil {
+			return err
+		}
+		_, err = stdout.Write([]byte(outStr))
+		return err
+	}
+	c.cmd = exec.Command(args[0], args[1:]...)
 
 	// Set the correct output device.
 	c.cmd.Stderr = c.StdErr
@@ -79,7 +88,8 @@ func (c *CommandTree) Start() error {
 	return c.cmd.Start()
 }
 
-func (c *CommandTree) Wait() (string, error) {
+// Wait awaits the command.
+func (c *Executable) Wait() (string, error) {
 	if c.cmd == nil {
 		data, err := ioutil.ReadAll(&c.buf)
 		if err != nil {
@@ -97,7 +107,7 @@ func (c *CommandTree) Wait() (string, error) {
 	return string(data), nil
 }
 
-func (c *CommandTree) nativeExec(args []string) (string, error) {
+func (c *Executable) nativeExec(args []string) (string, error) {
 	// Run hooks.
 	for _, hk := range c.Ctx.Hooks() {
 		args = hk.Apply(args)
@@ -118,7 +128,7 @@ func (c *CommandTree) nativeExec(args []string) (string, error) {
 	return strings.TrimSpace(string(bBuf)), nil
 }
 
-func (c *CommandTree) tryForBuiltIn(args []string) (string, bool, error) {
+func (c *Executable) tryForBuiltIn(args []string) (string, bool, error) {
 	switch args[0] {
 	case builtins.CdName:
 		return "", true, builtins.ChangeDirectory(args[1:])
@@ -132,11 +142,15 @@ func (c *CommandTree) tryForBuiltIn(args []string) (string, bool, error) {
 		return "", true, builtins.Hook(c.Ctx, args[1:])
 	case builtins.SetEnvName:
 		return "", true, builtins.SetEnv(args[1:])
+	case builtins.VersionName:
+		outStr, err := builtins.Version()
+		return outStr, true, err
 	}
 	return "", false, nil
 }
 
-func (c *CommandTree) Signal(s os.Signal) {
+// Signal sends an OS signal to the currently running command.
+func (c *Executable) Signal(s os.Signal) {
 	if c.cmd != nil && c.cmd.ProcessState != nil && !c.cmd.ProcessState.Exited() {
 		if err := c.cmd.Process.Signal(s); err != nil {
 			panic(err)
@@ -144,7 +158,8 @@ func (c *CommandTree) Signal(s os.Signal) {
 	}
 }
 
-func (c *CommandTree) Evaluate() (string, error) {
+// Evaluate runs the command and waits for it to complete.
+func (c *Executable) Evaluate() (string, error) {
 	args, err := c.parseArguments()
 	if err != nil {
 		return "", err

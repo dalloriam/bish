@@ -7,6 +7,7 @@ import (
 	"os"
 )
 
+// A PipeCommand represents a command piped into another.
 type PipeCommand struct {
 	SrcCommand Command
 	DstCommand Command
@@ -20,17 +21,20 @@ type PipeCommand struct {
 	pipeWrite *io.PipeWriter
 }
 
+// Signal sends the OS signal to both commands in the pipe sequence.
 func (c *PipeCommand) Signal(s os.Signal) {
 	c.SrcCommand.Signal(s)
 	c.DstCommand.Signal(s)
 }
 
+// Bind binds the provided stdin to the first command, and the stdout/stderr to the second command in the pipe sequence.
 func (c *PipeCommand) Bind(stdin io.Reader, stdout, stderr io.Writer) {
 	c.StdIn = stdin
 	c.StdOut = stdout
 	c.StdErr = stderr
 }
 
+// Start starts the pipe sequence asynchronously.
 func (c *PipeCommand) Start() error {
 	r, w := io.Pipe()
 	c.pipeWrite = w
@@ -52,6 +56,7 @@ func (c *PipeCommand) Start() error {
 	return c.DstCommand.Start()
 }
 
+// Wait awaits the pipe sequence.
 func (c *PipeCommand) Wait() (string, error) {
 	if _, err := c.SrcCommand.Wait(); err != nil {
 		return "", err
@@ -76,6 +81,7 @@ func (c *PipeCommand) Wait() (string, error) {
 	return out, nil
 }
 
+// Evaluate runs & awaits the pipe sequence.
 func (c *PipeCommand) Evaluate() (string, error) {
 	if err := c.Start(); err != nil {
 		return "", err

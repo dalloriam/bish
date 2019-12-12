@@ -10,7 +10,8 @@ import (
 	"github.com/dalloriam/bish/bish/state"
 )
 
-type CommandRequest struct {
+// A Request expresses the intent to execute a command -- either from the user or from a script.
+type Request struct {
 	Context   *state.State
 	UserInput string
 
@@ -19,7 +20,8 @@ type CommandRequest struct {
 	Stderr io.Writer
 }
 
-func (c *CommandRequest) Execute() error {
+// Execute executes the command.
+func (c *Request) Execute() error {
 	// Remove the newline character.
 	input := strings.TrimSuffix(c.UserInput, "\n")
 

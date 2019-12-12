@@ -2,6 +2,7 @@ package builtins
 
 import "github.com/dalloriam/bish/bish/state"
 
+// Name of the prompt builtin.
 const (
 	PromptName = "prompt"
 )

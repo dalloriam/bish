@@ -5,10 +5,12 @@ import (
 	"os"
 )
 
+// Name of the env command.
 const (
 	SetEnvName = "set"
 )
 
+// SetEnv sets an environment variable.
 func SetEnv(args []string) error {
 	if len(args) != 2 {
 		return errors.New("invalid setenv syntax")
