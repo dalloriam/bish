@@ -24,13 +24,12 @@ func (c *Completer) findCandidates(lineStr string, currentTok string) []string {
 	if len(strings.Split(lineStr, " ")) == 1 {
 		// Attempt executable completion
 		return listExecutables()
-	} else {
-		// TODO: Path completion + context-sensitive completion.
-		return listPathOptions(currentTok)
 	}
+	return listPathOptions(currentTok)
 
 }
 
+// Do performs an autocomplete step.
 func (c *Completer) Do(line []rune, pos int) ([][]rune, int) {
 	lineStr := string(line)
 

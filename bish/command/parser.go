@@ -47,6 +47,7 @@ func applySupportedEscapes(in string) string {
 	return strings.ReplaceAll(in, "\\t", "\t")
 }
 
+// ParseArguments tokenizes the command according to shell syntax.
 func ParseArguments(in string) ([]string, error) {
 	// Pre-process input to convert supported escapes.
 	// Eg. []rune{'\', 'n'} => []rune{'\n'}
