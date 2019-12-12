@@ -1,6 +1,8 @@
 package main
 
-import "github.com/dalloriam/bish/bish"
+import (
+	"github.com/dalloriam/bish/bish"
+)
 
 func main() {
 	backend, err := newBackend()

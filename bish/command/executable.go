@@ -57,15 +57,11 @@ func (c *Executable) Start() error {
 	if err != nil {
 		return err
 	}
-	_, ok, err := c.tryForBuiltIn(args)
-	if ok {
-		return err
-	}
+
 	// Run hooks.
 	for _, hk := range c.Ctx.Hooks() {
 		args = hk.Apply(args)
 	}
-	c.cmd = exec.Command(args[0], args[1:]...)
 
 	var stdout io.Writer
 	if c.Shell {
@@ -73,6 +69,16 @@ func (c *Executable) Start() error {
 	} else {
 		stdout = &c.buf
 	}
+
+	outStr, ok, err := c.tryForBuiltIn(args)
+	if ok {
+		if err != nil {
+			return err
+		}
+		_, err = stdout.Write([]byte(outStr))
+		return err
+	}
+	c.cmd = exec.Command(args[0], args[1:]...)
 
 	// Set the correct output device.
 	c.cmd.Stderr = c.StdErr
@@ -136,6 +142,9 @@ func (c *Executable) tryForBuiltIn(args []string) (string, bool, error) {
 		return "", true, builtins.Hook(c.Ctx, args[1:])
 	case builtins.SetEnvName:
 		return "", true, builtins.SetEnv(args[1:])
+	case builtins.VersionName:
+		outStr, err := builtins.Version()
+		return outStr, true, err
 	}
 	return "", false, nil
 }
