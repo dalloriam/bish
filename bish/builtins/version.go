@@ -13,6 +13,7 @@ const (
 	VersionName = "version"
 )
 
+// Version returns the current version.
 func Version() (string, error) {
 	bish := aurora.Green("BiSH")
 	vPrompt := aurora.Blue("Version: ")
