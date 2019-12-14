@@ -4,30 +4,32 @@ import (
 	"errors"
 	"io/ioutil"
 
-	"github.com/dalloriam/bish/bish/hooks"
-
+	"github.com/dalloriam/bish/bish/script"
 	"github.com/dalloriam/bish/bish/state"
 )
 
 // Name of the hook builtin.
 const (
-	HookName = "hook"
+	hookName = "hook"
 )
 
-// Hook defines a command hook.
-func Hook(ctx *state.State, args []string) error {
+func init() {
+	registry[hookName] = hook
+}
+
+func hook(ctx *state.State, args []string) (string, error) {
 	if len(args) == 2 {
 		// Setting a hook.
 		hookSrc, err := ioutil.ReadFile(args[1])
 		if err != nil {
-			return err
+			return "", err
 		}
-		hookObject, err := hooks.Script(args[0], string(hookSrc))
+		hookObject, err := script.NewHook(args[0], string(hookSrc), ctx.ScriptRuntime())
 		if err != nil {
-			return err
+			return "", err
 		}
 		ctx.AddHook(args[0], hookObject)
-		return nil
+		return "", nil
 	}
-	return errors.New("invalid syntax")
+	return "", errors.New("invalid syntax")
 }

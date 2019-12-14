@@ -70,7 +70,7 @@ func (c *Executable) Start() error {
 		stdout = &c.buf
 	}
 
-	outStr, ok, err := c.tryForBuiltIn(args)
+	outStr, ok, err := builtins.TryBuiltIns(c.Ctx, args)
 	if ok {
 		if err != nil {
 			return err
@@ -128,27 +128,6 @@ func (c *Executable) nativeExec(args []string) (string, error) {
 	return strings.TrimSpace(string(bBuf)), nil
 }
 
-func (c *Executable) tryForBuiltIn(args []string) (string, bool, error) {
-	switch args[0] {
-	case builtins.CdName:
-		return "", true, builtins.ChangeDirectory(args[1:])
-	case builtins.ExitName:
-		return "", true, builtins.Exit()
-	case builtins.AliasName:
-		return "", true, builtins.Alias(c.Ctx, args[1:])
-	case builtins.PromptName:
-		return "", true, builtins.Prompt(c.Ctx, args[1])
-	case builtins.HookName:
-		return "", true, builtins.Hook(c.Ctx, args[1:])
-	case builtins.SetEnvName:
-		return "", true, builtins.SetEnv(args[1:])
-	case builtins.VersionName:
-		outStr, err := builtins.Version()
-		return outStr, true, err
-	}
-	return "", false, nil
-}
-
 // Signal sends an OS signal to the currently running command.
 func (c *Executable) Signal(s os.Signal) {
 	if c.cmd != nil && c.cmd.ProcessState != nil && !c.cmd.ProcessState.Exited() {
@@ -165,7 +144,7 @@ func (c *Executable) Evaluate() (string, error) {
 		return "", err
 	}
 
-	out, ok, err := c.tryForBuiltIn(args)
+	out, ok, err := builtins.TryBuiltIns(c.Ctx, args)
 	if ok {
 		return out, err
 	}

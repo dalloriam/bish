@@ -1,14 +1,21 @@
 package builtins
 
-import "os"
+import (
+	"os"
+
+	"github.com/dalloriam/bish/bish/state"
+)
 
 // Name of the exit builtin.
 const (
-	ExitName = "exit"
+	exitName = "exit"
 )
 
-// Exit exits the shell.
-func Exit() error {
+func init() {
+	registry[exitName] = exit
+}
+
+func exit(*state.State, []string) (string, error) {
 	os.Exit(0)
-	return nil
+	return "", nil
 }

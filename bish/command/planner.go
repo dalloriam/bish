@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/dalloriam/bish/bish/hooks"
-
 	"github.com/dalloriam/bish/bish/state"
 )
 
@@ -23,7 +21,7 @@ Grammar:
 type ExecutionPlanner struct {
 	Args  []string
 	ctx   *state.State
-	hooks []hooks.Hook
+	hooks []state.Hook
 
 	idx        int
 	currentTok *string
@@ -73,7 +71,7 @@ func (p *ExecutionPlanner) Argument() (Argument, error) {
 
 	} else if p.accept("<") {
 		p.advance()
-		subcmd := &PythonArgument{*p.currentTok}
+		subcmd := &PythonArgument{*p.currentTok, p.ctx}
 		if !p.accept(">") {
 			return nil, errors.New("no closing angle bracket")
 		}

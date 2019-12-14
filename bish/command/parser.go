@@ -121,14 +121,14 @@ func ParseArguments(in string) ([]string, error) {
 	}
 
 	// TODO: Hide under debug setting
-	//r, _ := json.Marshal(tokens)
-	//fmt.Println("parsed: ", string(r))
+	// r, _ := json.Marshal(tokens)
+	// fmt.Println("parsed: ", string(r))
 
 	return tokens, nil
 }
 
 func substituteEnvironmentVariables(argument string) string {
-	pattern := regexp.MustCompile(`\$[a-zA-Z0-9]+`)
+	pattern := regexp.MustCompile(`\$[a-zA-Z0-9_]+`)
 	matches := pattern.FindAllString(argument, -1)
 	for _, match := range matches {
 		key := os.Getenv(match[1:])

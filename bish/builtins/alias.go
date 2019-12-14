@@ -8,16 +8,19 @@ import (
 
 // Attributes of the alias commands.
 const (
-	AliasName       = "alias"
-	AliasContextKey = "alias"
+	aliasName       = "alias"
+	AliasContextKey = "alias" // TODO: Extract this const outside of builtins package.
 )
 
-// Alias defines user aliases.
-func Alias(ctx *state.State, args []string) error {
+func init() {
+	registry[aliasName] = alias
+}
+
+func alias(ctx *state.State, args []string) (string, error) {
 	if len(args) < 2 {
-		return errors.New("invalid alias syntax")
+		return "", errors.New("invalid alias syntax")
 	}
 	ctx.SetKey("alias", args[0], args[1:])
 
-	return nil
+	return "", nil
 }

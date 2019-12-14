@@ -1,4 +1,4 @@
-package hooks
+package state
 
 // A Hook pre-processes command arguments.
 type Hook interface {
