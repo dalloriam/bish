@@ -13,7 +13,7 @@ type promptContext struct {
 }
 
 func (p *promptContext) Render(temp string) ([]string, error) {
-	ren, err := template.New("hello").Parse(temp)
+	ren, err := template.New("user_prompt").Parse(temp)
 	if err != nil {
 		return nil, err
 	}

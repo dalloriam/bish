@@ -1,33 +1,29 @@
-package hooks
+package script
 
 import (
 	"errors"
-	"fmt"
 
 	"go.starlark.net/starlark"
 )
 
-var t = &starlark.Thread{
-	Name:  "hook",
-	Print: func(_ *starlark.Thread, msg string) { fmt.Println(msg) },
-}
+// A Hook calls a starlark function before command execution.
+type Hook struct {
+	Name    string
+	Source  string
+	runtime *Runtime
 
-type scriptHook struct {
-	Name   string
-	Source string
-
-	matchCall starlark.Value
 	applyCall starlark.Value
 }
 
-// Script returns a new script hook from provided source code.
-func Script(name string, source string) (Hook, error) {
-	s := &scriptHook{
-		Name:   name,
-		Source: source,
+// NewHook returns a new script hook from provided source code.
+func NewHook(name string, source string, runtime *Runtime) (*Hook, error) {
+	s := &Hook{
+		Name:    name,
+		Source:  source,
+		runtime: runtime,
 	}
 
-	globals, err := starlark.ExecFile(t, fmt.Sprintf("%s.star", name), source, nil)
+	globals, err := s.runtime.ExecSandbox(s.Name, s.Source)
 	if err != nil {
 		return nil, err
 	}
@@ -41,17 +37,16 @@ func Script(name string, source string) (Hook, error) {
 	return s, nil
 }
 
-func (j *scriptHook) runCall(call starlark.Value, args []string) (starlark.Value, error) {
+func (j *Hook) runCall(call starlark.Value, args []string) (starlark.Value, error) {
 	var argValues []starlark.Value
 	for _, arg := range args {
 		argValues = append(argValues, starlark.String(arg))
 	}
-	v, err := starlark.Call(t, call, starlark.Tuple{starlark.NewList(argValues)}, nil)
-	return v, err
+	return j.runtime.CallRaw(j.applyCall, []starlark.Value{starlark.NewList(argValues)}, nil)
 }
 
 // Apply applies the script hook.
-func (j *scriptHook) Apply(args []string) []string {
+func (j *Hook) Apply(args []string) []string {
 	if j.applyCall == nil {
 		return args
 	}

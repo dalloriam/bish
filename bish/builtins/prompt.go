@@ -1,14 +1,24 @@
 package builtins
 
-import "github.com/dalloriam/bish/bish/state"
+import (
+	"errors"
+
+	"github.com/dalloriam/bish/bish/state"
+)
 
 // Name of the prompt builtin.
 const (
-	PromptName = "prompt"
+	promptName = "prompt"
 )
 
-// Prompt sets the user prompt in the context.
-func Prompt(ctx *state.State, val string) error {
-	ctx.SetKey("prompt", "prompt", val)
-	return nil
+func init() {
+	registry[promptName] = prompt
+}
+
+func prompt(ctx *state.State, args []string) (string, error) {
+	if len(args) != 1 {
+		return "", errors.New("invalid set prompt syntax")
+	}
+	ctx.SetKey("prompt", "prompt", args[0])
+	return "", nil
 }

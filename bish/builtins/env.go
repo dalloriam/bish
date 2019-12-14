@@ -3,20 +3,25 @@ package builtins
 import (
 	"errors"
 	"os"
+
+	"github.com/dalloriam/bish/bish/state"
 )
 
 // Name of the env command.
 const (
-	SetEnvName = "set"
+	setEnvName = "set"
 )
 
-// SetEnv sets an environment variable.
-func SetEnv(args []string) error {
+func init() {
+	registry[setEnvName] = setEnv
+}
+
+func setEnv(_ *state.State, args []string) (string, error) {
 	if len(args) != 2 {
-		return errors.New("invalid setenv syntax")
+		return "", errors.New("invalid setenv syntax")
 	}
 
 	key := args[0]
 	val := args[1]
-	return os.Setenv(key, val)
+	return "", os.Setenv(key, val)
 }
