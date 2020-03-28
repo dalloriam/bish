@@ -6,35 +6,33 @@ import (
 	"os/user"
 	"regexp"
 	"strings"
-	"unicode"
 
+	"github.com/dalloriam/bish/bish/constants"
 	"github.com/dalloriam/bish/bish/state"
-
-	"github.com/dalloriam/bish/bish/builtins"
 )
 
 var keepChars = []rune{'(', ')', '[', ']', '!', ';', '|', '>', '<'}
 var keepCharMap map[rune]struct{}
 
-var nonSeparators = []rune{'$', '-', '_', '/', '.', '~'}
-var nonSeparatorMap map[rune]struct{}
+var separators = []rune{' ', '\t', '\n'}
+var separatorsMap map[rune]struct{}
 
 func init() {
 	keepCharMap = make(map[rune]struct{})
-	nonSeparatorMap = make(map[rune]struct{})
+	separatorsMap = make(map[rune]struct{})
 
 	for _, r := range keepChars {
 		keepCharMap[r] = struct{}{}
 	}
 
-	for _, r := range nonSeparators {
-		nonSeparatorMap[r] = struct{}{}
+	for _, r := range separators {
+		separatorsMap[r] = struct{}{}
 	}
 }
 
 func isSeparator(ch rune) bool {
-	_, ok := nonSeparatorMap[ch]
-	return !(unicode.IsLetter(ch) || unicode.IsDigit(ch) || ok)
+	_, ok := separatorsMap[ch]
+	return ok
 }
 
 func isKeepChar(ch rune) (ok bool) {
@@ -147,7 +145,7 @@ func substituteHome(arg string) (string, error) {
 
 func substituteAliases(ctx *state.State, arg string) ([]string, error) {
 	var out []string
-	if v, ok := ctx.GetKey(builtins.AliasContextKey, arg); ok {
+	if v, ok := ctx.GetKey(constants.AliasKey, arg); ok {
 		if s, sOk := v.(string); sOk {
 			out = append(out, s)
 		} else if ss, ssOk := v.([]string); ssOk {
